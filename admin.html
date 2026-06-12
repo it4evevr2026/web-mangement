@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hommkesa Coupon — Admin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f5f0eb;color:#3d2000}
+
+    .topbar{background:#7c4a2d;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+    .topbar .brand{font-size:18px;font-weight:700}
+    .topbar .brand span{color:#f5c98a}
+    #logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+
+    .tabs{background:#fff;border-bottom:2px solid #f0e6d8;display:flex;gap:4px;padding:0 24px;overflow-x:auto}
+    .tab{padding:12px 18px;cursor:pointer;font-weight:600;border-bottom:3px solid transparent;font-size:13px;color:#999;white-space:nowrap;transition:all .2s}
+    .tab.active{color:#c0874a;border-bottom-color:#c0874a}
+
+    .content{padding:20px;max-width:1200px;margin:0 auto}
+
+    /* Login */
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px)}
+    .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,.10);text-align:center}
+    .login-card h2{margin-bottom:20px;color:#7c4a2d}
+
+    /* Cards */
+    .card{background:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .card h3{font-size:15px;margin-bottom:16px;color:#7c4a2d;font-weight:700}
+
+    /* Inputs */
+    input,select{width:100%;padding:9px 13px;border:1.5px solid #e8d8c4;border-radius:10px;font-size:13px;outline:none;background:#fff;transition:border-color .2s}
+    input:focus,select:focus{border-color:#c0874a}
+    .form-group label{font-size:11px;color:#999;display:block;margin-bottom:3px}
+
+    /* Buttons */
+    .btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+    .btn:active{opacity:.8}
+    .btn-primary{background:#c0874a;color:#fff}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-outline{background:#f0e6d8;color:#7c4a2d}
+    .btn-sm{padding:5px 12px;font-size:12px}
+
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+    .stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.06);text-align:center}
+    .stat-card .val{font-size:28px;font-weight:800;color:#c0874a}
+    .stat-card .lbl{font-size:12px;color:#999;margin-top:3px}
+
+    /* Table */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#f5f0eb;padding:9px 10px;text-align:left;font-weight:600;color:#7c4a2d;white-space:nowrap}
+    td{padding:8px 10px;border-bottom:1px solid #f0e6d8;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#fdf7f0}
+
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-used{background:#e8f5e9;color:#2e7d32}
+    .badge-pending{background:#fff3e0;color:#e65100}
+    .badge-expired{background:#fce4ec;color:#c62828}
+    .badge-ok{background:#e8f5e9;color:#2e7d32}
+    .badge-diff{background:#fce4ec;color:#c62828}
+    .badge-missing{background:#fff3e0;color:#e65100}
+
+    /* Shop form */
+    .shop-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;align-items:end;margin-bottom:20px}
+
+    /* QR Grid */
+    .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+    .qr-item{background:#fff;border:1.5px solid #e8d8c4;border-radius:14px;padding:18px;text-align:center;cursor:pointer}
+    .qr-item:hover{border-color:#c0874a}
+    .qr-item .qr-shop-name{font-weight:700;margin-top:8px;color:#3d2000;font-size:14px}
+    .qr-item .qr-shop-id{font-size:11px;color:#aaa}
+
+    /* Sale inline edit */
+    .sale-input{width:90px;padding:4px 8px;font-size:12px}
+    .calc-row{font-size:11px;color:#888;margin-top:2px}
+
+    /* Import / Compare */
+    .upload-zone{border:2px dashed #c0874a;border-radius:14px;padding:28px;text-align:center;cursor:pointer;background:#fff9f4;transition:background .2s}
+    .upload-zone:hover{background:#fff0e0}
+    .upload-zone input[type=file]{display:none}
+    .upload-zone .icon{font-size:36px;margin-bottom:8px}
+    .upload-zone p{color:#c0874a;font-weight:600;font-size:14px}
+    .upload-zone small{color:#aaa;font-size:12px}
+
+    .mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+    @media(max-width:600px){.mapping-grid{grid-template-columns:1fr}}
+
+    .compare-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+    .compare-card{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
+    .compare-card .cv{font-size:22px;font-weight:800}
+    .compare-card .cl{font-size:11px;color:#999;margin-top:2px}
+    .cv-green{color:#2e7d32}.cv-red{color:#c62828}.cv-orange{color:#e65100}.cv-blue{color:#1565c0}
+
+    /* Misc */
+    .hidden{display:none!important}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .mt-12{margin-top:12px}
+    .text-muted{color:#aaa;font-size:12px}
+    .divider{border:none;border-top:1px solid #f0e6d8;margin:16px 0}
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3d2000;color:#fff;padding:11px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Hommk<span>esa</span> Admin</div>
+  <button id="logout-btn" class="hidden" onclick="logout()">ออกจากระบบ</button>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h2>เข้าสู่ระบบ Admin</h2>
+    <div class="form-group" style="text-align:left;margin-bottom:14px">
+      <label>รหัสผ่าน</label>
+      <input type="password" id="login-pwd" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <p id="login-err" class="hidden" style="color:#e74c3c;font-size:13px;margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-app" class="hidden">
+  <div class="tabs">
+    <div class="tab active"  onclick="switchTab('dashboard')">📊 Dashboard</div>
+    <div class="tab"         onclick="switchTab('shops')">🏪 ร้านค้า</div>
+    <div class="tab"         onclick="switchTab('logs')">📋 Log & ยอดขาย</div>
+    <div class="tab"         onclick="switchTab('compare')">🔍 ตรวจสอบยอด</div>
+    <div class="tab"         onclick="switchTab('qrcodes')">QR Codes</div>
+    <div class="tab"         onclick="switchTab('settings')">⚙️ ตั้งค่า</div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="val" id="st-total">—</div><div class="lbl">รหัสทั้งหมด</div></div>
+        <div class="stat-card"><div class="val" id="st-used">—</div><div class="lbl">ใช้แล้ว</div></div>
+        <div class="stat-card"><div class="val" id="st-pending">—</div><div class="lbl">รอใช้งาน</div></div>
+        <div class="stat-card"><div class="val" id="st-discount">—</div><div class="lbl">ส่วนลดรวม (฿)</div></div>
+        <div class="stat-card"><div class="val" id="st-net">—</div><div class="lbl">ยอดสุทธิรวม (฿)</div></div>
+        <div class="stat-card"><div class="val" id="st-comm">—</div><div class="lbl">ค่าคอมรวม (฿)</div></div>
+      </div>
+      <div class="card">
+        <h3>Log ล่าสุด 10 รายการ</h3>
+        <div class="tbl-wrap">
+          <table id="tbl-recent">
+            <thead><tr><th>รหัส</th><th>ร้าน</th><th>ส่วนลด</th><th>ยอดขาย</th><th>ยอดสุทธิ</th><th>ค่าคอม</th><th>สถานะ</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOPS -->
+    <div id="tab-shops" class="hidden">
+      <div class="card">
+        <h3>เพิ่ม / แก้ไขร้านค้า</h3>
+        <div class="shop-form">
+          <div class="form-group"><label>Shop ID *</label><input id="f-sid" placeholder="SHOP001"></div>
+          <div class="form-group"><label>ชื่อร้าน *</label><input id="f-sname" placeholder="สาขา 1"></div>
+          <div class="form-group"><label>ส่วนลด (฿) *</label><input id="f-disc" type="number" placeholder="200"></div>
+          <div class="form-group"><label>ค่าคอม (%)</label><input id="f-comm" type="number" placeholder="5" step="0.1"></div>
+          <div class="form-group"><label>สถานะ</label>
+            <select id="f-active"><option value="true">เปิด</option><option value="false">ปิด</option></select>
+          </div>
+          <div class="form-group" style="display:flex;gap:8px;align-items:flex-end">
+            <button class="btn btn-primary" onclick="saveShop()">บันทึก</button>
+            <button class="btn btn-outline" onclick="clearShopForm()">ล้าง</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table id="tbl-shops">
+            <thead><tr><th>Shop ID</th><th>ชื่อร้าน</th><th>ส่วนลด (฿)</th><th>ค่าคอม (%)</th><th>สถานะ</th><th>แก้ไข</th><th>ลบ</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="tab-logs" class="hidden">
+      <div class="card">
+        <div class="row" style="margin-bottom:12px">
+          <h3 style="margin:0">Log & ยอดขาย</h3>
+          <input id="log-search" placeholder="ค้นหารหัส / ชื่อร้าน" style="max-width:220px">
+          <select id="log-filter" style="max-width:130px">
+            <option value="">ทุกสถานะ</option>
+            <option value="used">ใช้แล้ว</option>
+            <option value="pending">รอใช้</option>
+            <option value="expired">หมดอายุ</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadLogs()">รีเฟรช</button>
+          <button class="btn btn-outline btn-sm" onclick="exportLogCSV()">Export CSV</button>
+        </div>
+        <div class="tbl-wrap">
+          <table id="tbl-logs">
+            <thead>
+              <tr>
+                <th>รหัส</th><th>ร้าน</th><th>ส่วนลด(฿)</th>
+                <th>ราคาขาย(฿)</th><th>ยอดสุทธิ(฿)</th>
+                <th>ค่าคอม%</th><th>ค่าคอม(฿)</th>
+                <th>สร้างเมื่อ</th><th>สถานะ</th><th>บันทึก</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARE -->
+    <div id="tab-compare" class="hidden">
+      <div class="card">
+        <h3>อัพโหลดไฟล์ยอดขายจากร้าน (Excel / CSV)</h3>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+          <div class="icon">📂</div>
+          <p>คลิกเพื่อเลือกไฟล์ Excel หรือ CSV</p>
+          <small>รองรับ .xlsx, .xls, .csv</small>
+        </div>
+      </div>
+
+      <!-- Column Mapping -->
+      <div class="card hidden" id="mapping-card">
+        <h3>กำหนด Column Mapping</h3>
+        <p class="text-muted" style="margin-bottom:12px">เลือกว่า column ไหนในไฟล์ของคุณ ตรงกับข้อมูลอะไร</p>
+        <div class="mapping-grid">
+          <div class="form-group"><label>Column "เลขที่ QR / รหัสคูปอง"</label><select id="map-code"></select></div>
+          <div class="form-group"><label>Column "วันที่"</label><select id="map-date"></select></div>
+          <div class="form-group"><label>Column "ร้าน / สาขา"</label><select id="map-shop"></select></div>
+          <div class="form-group"><label>Column "ราคาขาย / ยอดรวม"</label><select id="map-amount"></select></div>
+        </div>
+        <div class="row mt-12">
+          <button class="btn btn-primary" onclick="runCompare()">เปรียบเทียบกับระบบ</button>
+          <button class="btn btn-outline" onclick="resetImport()">เริ่มใหม่</button>
+        </div>
+      </div>
+
+      <!-- Compare Result -->
+      <div id="compare-result" class="hidden">
+        <div class="compare-summary" id="compare-summary"></div>
+        <div class="card">
+          <div class="row" style="margin-bottom:12px">
+            <h3 style="margin:0">ผลการเปรียบเทียบ</h3>
+            <select id="compare-filter" style="max-width:160px" onchange="renderCompareTable()">
+              <option value="">ทั้งหมด</option>
+              <option value="match">✅ ตรงกัน</option>
+              <option value="diff">❌ ยอดต่างกัน</option>
+              <option value="missing_sys">⚠️ ไม่มีในระบบ</option>
+              <option value="missing_file">📭 ไม่มีในไฟล์</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="exportCompareCSV()">Export ผล</button>
+          </div>
+
+          <!-- Daily Summary -->
+          <h3 style="font-size:13px;color:#999;margin-bottom:8px">ยอดรวมรายวัน</h3>
+          <div class="tbl-wrap" style="margin-bottom:20px">
+            <table id="tbl-daily">
+              <thead><tr><th>วันที่</th><th>ร้าน</th><th>ยอดในไฟล์(฿)</th><th>ยอดในระบบ(฿)</th><th>ผลต่าง(฿)</th><th>สถานะ</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <hr class="divider">
+
+          <!-- Row-by-row -->
+          <h3 style="font-size:13px;color:#999;margin-bottom:8px">ตรวจสอบรายรหัส QR</h3>
+          <div class="tbl-wrap">
+            <table id="tbl-compare">
+              <thead><tr><th>รหัส QR</th><th>ร้าน</th><th>วันที่</th><th>ยอดในไฟล์(฿)</th><th>ยอดในระบบ(฿)</th><th>ผลต่าง(฿)</th><th>สถานะ</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR CODES -->
+    <div id="tab-qrcodes" class="hidden">
+      <div class="card">
+        <h3>QR ประจำร้าน</h3>
+        <p class="text-muted mt-12" style="margin-bottom:14px">คลิกที่ QR เพื่อดาวน์โหลด PNG</p>
+        <div class="qr-grid" id="qr-grid"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="hidden">
+      <div class="card">
+        <h3>ตั้งค่าระบบ</h3>
+        <div class="form-group" style="max-width:260px;margin-bottom:16px">
+          <label>อายุรหัส (นาที)</label>
+          <input id="cfg-expiry" type="number" placeholder="20">
+        </div>
+        <button class="btn btn-primary" onclick="saveConfig()">บันทึกการตั้งค่า</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main-app -->
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — แก้ไขตรงนี้
+// ============================================================
+const API_URL      = 'YOUR_APPS_SCRIPT_URL';
+const FRONTEND_URL = 'YOUR_GITHUB_PAGES_URL'; // เช่น https://user.github.io/hommkesa-coupon
+
+// ============================================================
+let adminPwd = '';
+let allLogs  = [];
+let allShops = [];
+let importedRows  = [];   // rows จากไฟล์
+let importHeaders = [];   // headers จากไฟล์
+let compareData   = [];   // ผลการเปรียบเทียบ
+
+// ============================================================
+// AUTH
+// ============================================================
+async function doLogin() {
+  const pwd = document.getElementById('login-pwd').value.trim();
+  if (!pwd) return;
+  const data = await apiGet({ action: 'getShops', pwd });
+  if (data.success) {
+    adminPwd = pwd;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    document.getElementById('logout-btn').classList.remove('hidden');
+    loadAll();
+  } else {
+    const el = document.getElementById('login-err');
+    el.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    el.classList.remove('hidden');
+  }
+}
+function logout() { adminPwd = ''; location.reload(); }
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet(params) {
+  try {
+    const res = await fetch(API_URL + '?' + new URLSearchParams(params));
+    return await res.json();
+  } catch(e) { return { success: false, error: e.message }; }
+}
+async function apiPost(body) {
+  try {
+    const res = await fetch(API_URL, { method:'POST', body: JSON.stringify({ ...body, pwd: adminPwd }) });
+    return await res.json();
+  } catch(e) { return { success: false, error: e.message }; }
+}
+
+// ============================================================
+// TABS
+// ============================================================
+const TAB_NAMES = ['dashboard','shops','logs','compare','qrcodes','settings'];
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', TAB_NAMES[i] === name));
+  TAB_NAMES.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t !== name));
+  if (name === 'logs')    loadLogs();
+  if (name === 'qrcodes') renderQRGrid();
+  if (name === 'settings') loadConfig();
+}
+
+// ============================================================
+// LOAD
+// ============================================================
+async function loadAll() {
+  await Promise.all([loadShops(), loadLogs()]);
+  renderDashboard();
+}
+
+// ---- Shops ----
+async function loadShops() {
+  const d = await apiGet({ action:'getShops', pwd:adminPwd });
+  if (!d.success) return;
+  allShops = d.shops;
+  renderShopsTable();
+}
+function renderShopsTable() {
+  const tb = document.querySelector('#tbl-shops tbody');
+  tb.innerHTML = '';
+  allShops.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.shop_id}</td><td>${s.shop_name}</td>
+      <td>฿${s.discount}</td><td>${s.commission_pct}%</td>
+      <td><span class="badge ${s.active?'badge-used':'badge-expired'}">${s.active?'เปิด':'ปิด'}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="editShop('${s.shop_id}')">แก้ไข</button></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteShop('${s.shop_id}')">ลบ</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function editShop(id) {
+  const s = allShops.find(x => x.shop_id === id);
+  if (!s) return;
+  document.getElementById('f-sid').value   = s.shop_id;
+  document.getElementById('f-sname').value = s.shop_name;
+  document.getElementById('f-disc').value  = s.discount;
+  document.getElementById('f-comm').value  = s.commission_pct;
+  document.getElementById('f-active').value = String(s.active);
+  switchTab('shops');
+}
+async function saveShop() {
+  const id   = document.getElementById('f-sid').value.trim();
+  const name = document.getElementById('f-sname').value.trim();
+  const disc = document.getElementById('f-disc').value.trim();
+  const comm = document.getElementById('f-comm').value.trim() || '0';
+  if (!id||!name||!disc) { toast('กรุณากรอกข้อมูลให้ครบ'); return; }
+  const d = await apiPost({ action:'saveShop', shop_id:id, shop_name:name, discount:parseFloat(disc), commission_pct:parseFloat(comm), active: document.getElementById('f-active').value==='true' });
+  if (d.success) { toast(d.action==='created'?'เพิ่มร้านแล้ว':'อัพเดตแล้ว'); clearShopForm(); await loadShops(); }
+  else toast('ผิดพลาด: '+d.error);
+}
+async function deleteShop(id) {
+  if (!confirm(`ลบร้าน ${id}?`)) return;
+  const d = await apiPost({ action:'deleteShop', shop_id:id });
+  if (d.success) { toast('ลบแล้ว'); await loadShops(); } else toast('ผิดพลาด');
+}
+function clearShopForm() {
+  ['f-sid','f-sname','f-disc','f-comm'].forEach(x => document.getElementById(x).value='');
+  document.getElementById('f-active').value='true';
+}
+
+// ---- Logs ----
+async function loadLogs() {
+  const d = await apiGet({ action:'getLogs', pwd:adminPwd, limit:1000 });
+  if (!d.success) return;
+  allLogs = d.logs;
+  renderLogsTable();
+}
+function getStatus(l) {
+  if (l.status==='used') return 'used';
+  if (new Date(l.expires_at) < new Date()) return 'expired';
+  return 'pending';
+}
+function renderLogsTable() {
+  const search = (document.getElementById('log-search')?.value||'').toLowerCase();
+  const filter = document.getElementById('log-filter')?.value||'';
+  const tb = document.querySelector('#tbl-logs tbody');
+  tb.innerHTML = '';
+  allLogs.forEach(l => {
+    const st = getStatus(l);
+    if (filter && st !== filter) return;
+    if (search && !l.code.toLowerCase().includes(search) && !l.shop_name.toLowerCase().includes(search)) return;
+    const stLabel = {used:'ใช้แล้ว',pending:'รอใช้',expired:'หมดอายุ'}[st];
+    const stCls   = {used:'badge-used',pending:'badge-pending',expired:'badge-expired'}[st];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><b>${l.code}</b></td>
+      <td>${l.shop_name}</td>
+      <td>฿${l.discount}</td>
+      <td><input class="sale-input" type="number" placeholder="กรอกราคา" value="${l.sale_amount||''}"
+          onblur="saveSale('${l.code}',this.value,this)" id="sale-${l.code}"></td>
+      <td id="net-${l.code}">${l.net_amount !== '' ? '฿'+Number(l.net_amount).toLocaleString() : '—'}</td>
+      <td>${l.commission_pct}%</td>
+      <td id="com-${l.code}">${l.commission_amount !== '' ? '฿'+Number(l.commission_amount).toLocaleString() : '—'}</td>
+      <td>${l.created_at}</td>
+      <td><span class="badge ${stCls}">${stLabel}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="saveSale('${l.code}',document.getElementById('sale-${l.code}').value)">บันทึก</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+async function saveSale(code, val) {
+  if (!val || isNaN(parseFloat(val))) { toast('กรุณากรอกราคาให้ถูกต้อง'); return; }
+  const d = await apiPost({ action:'updateSale', code, sale_amount: parseFloat(val) });
+  if (d.success) {
+    document.getElementById('net-'+code).textContent = '฿'+Number(d.net_amount).toLocaleString();
+    document.getElementById('com-'+code).textContent = '฿'+Number(d.commission_amount).toLocaleString();
+    // update allLogs
+    const idx = allLogs.findIndex(x => x.code===code);
+    if (idx>=0) { allLogs[idx].sale_amount=d.sale_amount; allLogs[idx].net_amount=d.net_amount; allLogs[idx].commission_amount=d.commission_amount; }
+    renderDashboard();
+    toast('บันทึกแล้ว');
+  } else toast('ผิดพลาด: '+d.error);
+}
+
+function exportLogCSV() {
+  const rows = [['รหัส','ร้าน','ส่วนลด','ราคาขาย','ยอดสุทธิ','ค่าคอม%','ค่าคอม(฿)','สร้างเมื่อ','ใช้เมื่อ','สถานะ']];
+  allLogs.forEach(l => rows.push([l.code,l.shop_name,l.discount,l.sale_amount||'',l.net_amount||'',l.commission_pct,l.commission_amount||'',l.created_at,l.used_at||'',getStatus(l)]));
+  downloadCSV(rows, 'hommkesa_log.csv');
+}
+
+// ---- Dashboard ----
+function renderDashboard() {
+  const used  = allLogs.filter(l => l.status==='used');
+  const pend  = allLogs.filter(l => l.status==='pending' && new Date(l.expires_at)>=new Date());
+  const disc  = used.reduce((s,l)=>s+parseFloat(l.discount||0),0);
+  const net   = used.filter(l=>l.net_amount!=='').reduce((s,l)=>s+parseFloat(l.net_amount||0),0);
+  const comm  = used.filter(l=>l.commission_amount!=='').reduce((s,l)=>s+parseFloat(l.commission_amount||0),0);
+  document.getElementById('st-total').textContent   = allLogs.length;
+  document.getElementById('st-used').textContent    = used.length;
+  document.getElementById('st-pending').textContent = pend.length;
+  document.getElementById('st-discount').textContent = disc.toLocaleString();
+  document.getElementById('st-net').textContent      = net.toLocaleString();
+  document.getElementById('st-comm').textContent     = comm.toFixed(2);
+
+  const tb = document.querySelector('#tbl-recent tbody');
+  tb.innerHTML = '';
+  allLogs.slice(0,10).forEach(l => {
+    const st = getStatus(l);
+    const stCls = {used:'badge-used',pending:'badge-pending',expired:'badge-expired'}[st];
+    const stLbl = {used:'ใช้แล้ว',pending:'รอใช้',expired:'หมดอายุ'}[st];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b>${l.code}</b></td><td>${l.shop_name}</td><td>฿${l.discount}</td>
+      <td>${l.sale_amount?'฿'+Number(l.sale_amount).toLocaleString():'—'}</td>
+      <td>${l.net_amount!==''?'฿'+Number(l.net_amount).toLocaleString():'—'}</td>
+      <td>${l.commission_amount!==''?'฿'+Number(l.commission_amount).toLocaleString():'—'}</td>
+      <td><span class="badge ${stCls}">${stLbl}</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ---- QR ----
+function renderQRGrid() {
+  const grid = document.getElementById('qr-grid');
+  grid.innerHTML = '';
+  allShops.forEach(s => {
+    const url = `${FRONTEND_URL}?shop=${s.shop_id}`;
+    const div = document.createElement('div');
+    div.className = 'qr-item';
+    const qrDiv = document.createElement('div');
+    new QRCode(qrDiv, { text:url, width:150, height:150, colorDark:'#3d2000', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M });
+    div.appendChild(qrDiv);
+    div.innerHTML += `<div class="qr-shop-name">${s.shop_name}</div><div class="qr-shop-id">${s.shop_id}</div>`;
+    div.onclick = () => { const c = div.querySelector('canvas'); if(c){const a=document.createElement('a');a.download=`QR_${s.shop_name}.png`;a.href=c.toDataURL();a.click();} };
+    grid.appendChild(div);
+  });
+}
+
+// ---- Config ----
+async function loadConfig() {
+  const d = await apiGet({ action:'getConfig', pwd:adminPwd });
+  if (d.success) document.getElementById('cfg-expiry').value = d.config.expiry_minutes||20;
+}
+async function saveConfig() {
+  const d = await apiPost({ action:'saveConfig', config:{ expiry_minutes: parseInt(document.getElementById('cfg-expiry').value)||20 } });
+  if (d.success) toast('บันทึกแล้ว'); else toast('ผิดพลาด');
+}
+
+// ============================================================
+// IMPORT & COMPARE
+// ============================================================
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    let rows = [];
+    if (ext === 'csv') {
+      const text = ev.target.result;
+      rows = parseCSV(text);
+    } else {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type:'array', cellDates:true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+    }
+    if (rows.length < 2) { toast('ไม่พบข้อมูลในไฟล์'); return; }
+    importHeaders = rows[0].map(String);
+    importedRows  = rows.slice(1).filter(r => r.some(c => c !== ''));
+    buildMappingUI();
+  };
+  if (ext === 'csv') reader.readAsText(file, 'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+
+function parseCSV(text) {
+  return text.split(/\r?\n/).map(line => {
+    const cells = []; let cur = ''; let inQ = false;
+    for (const ch of line) {
+      if (ch==='"') { inQ=!inQ; }
+      else if (ch===','&&!inQ) { cells.push(cur.trim()); cur=''; }
+      else cur+=ch;
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+
+function buildMappingUI() {
+  const opts = ['(ไม่มี)', ...importHeaders].map((h,i) => `<option value="${i-1}">${h}</option>`).join('');
+  ['map-code','map-date','map-shop','map-amount'].forEach(id => {
+    document.getElementById(id).innerHTML = opts;
+  });
+  // auto-guess
+  const guess = (keywords) => {
+    const idx = importHeaders.findIndex(h => keywords.some(k => h.toLowerCase().includes(k)));
+    return idx >= 0 ? idx : -1;
+  };
+  setMapVal('map-code',   guess(['qr','code','รหัส','coupon','คูปอง']));
+  setMapVal('map-date',   guess(['date','วัน','datetime','เวลา','time']));
+  setMapVal('map-shop',   guess(['shop','ร้าน','สาขา','branch','store']));
+  setMapVal('map-amount', guess(['amount','ราคา','ยอด','price','total','รวม']));
+  document.getElementById('mapping-card').classList.remove('hidden');
+  document.getElementById('compare-result').classList.add('hidden');
+}
+
+function setMapVal(id, val) {
+  const el = document.getElementById(id);
+  const opt = el.querySelector(`option[value="${val}"]`);
+  if (opt) opt.selected = true;
+}
+
+function getMapIdx(id) { return parseInt(document.getElementById(id).value); }
+
+function resetImport() {
+  importedRows=[]; importHeaders=[];
+  document.getElementById('file-input').value='';
+  document.getElementById('mapping-card').classList.add('hidden');
+  document.getElementById('compare-result').classList.add('hidden');
+}
+
+function runCompare() {
+  const cIdx = getMapIdx('map-code');
+  const dIdx = getMapIdx('map-date');
+  const sIdx = getMapIdx('map-shop');
+  const aIdx = getMapIdx('map-amount');
+
+  // Build map จาก allLogs: code → log
+  const logByCode = {};
+  allLogs.forEach(l => { logByCode[l.code.toUpperCase()] = l; });
+
+  // Build daily map จาก allLogs: "date|shop" → sum of sale_amount
+  const sysDaily = {};
+  allLogs.filter(l => l.status==='used').forEach(l => {
+    const day = (l.used_at||l.created_at||'').substring(0,10);
+    const key = day+'|'+l.shop_id;
+    sysDaily[key] = (sysDaily[key]||0) + parseFloat(l.sale_amount||0);
+  });
+
+  compareData = [];
+  const fileDaily = {};
+
+  importedRows.forEach(row => {
+    const code   = cIdx>=0 ? String(row[cIdx]||'').trim().toUpperCase() : '';
+    const date   = dIdx>=0 ? String(row[dIdx]||'').trim().substring(0,10) : '';
+    const shop   = sIdx>=0 ? String(row[sIdx]||'').trim() : '';
+    const amount = aIdx>=0 ? parseFloat(String(row[aIdx]||'').replace(/[^0-9.]/g,''))||0 : 0;
+
+    // daily accumulate
+    const dayKey = date+'|'+shop;
+    if (!fileDaily[dayKey]) fileDaily[dayKey] = { date, shop, fileAmt:0, sysAmt:0 };
+    fileDaily[dayKey].fileAmt += amount;
+
+    // row compare
+    let sysAmt = '';
+    let rowStatus = 'missing_sys';
+    if (code && logByCode[code]) {
+      const log = logByCode[code];
+      sysAmt = log.sale_amount !== '' ? parseFloat(log.sale_amount) : '';
+      if (sysAmt === '') rowStatus = 'missing_sys';
+      else if (Math.abs(sysAmt - amount) < 0.01) rowStatus = 'match';
+      else rowStatus = 'diff';
+    }
+    compareData.push({ code, date, shop, fileAmt: amount, sysAmt, rowStatus });
+  });
+
+  // codes in system but not in file
+  const fileCodes = new Set(compareData.map(r=>r.code).filter(Boolean));
+  allLogs.filter(l=>l.status==='used').forEach(l => {
+    if (!fileCodes.has(l.code.toUpperCase())) {
+      compareData.push({ code:l.code, date:(l.used_at||l.created_at||'').substring(0,10), shop:l.shop_name, fileAmt:'', sysAmt:l.sale_amount||'', rowStatus:'missing_file' });
+    }
+  });
+
+  // daily compare
+  Object.values(fileDaily).forEach(d => {
+    const matchShop = allShops.find(s=>s.shop_name.includes(d.shop)||d.shop.includes(s.shop_name));
+    const key = d.date+'|'+(matchShop?matchShop.shop_id:d.shop);
+    d.sysAmt = sysDaily[key]||0;
+  });
+
+  renderCompareResult(fileDaily);
+}
+
+function renderCompareResult(fileDaily) {
+  const total   = compareData.length;
+  const match   = compareData.filter(r=>r.rowStatus==='match').length;
+  const diff    = compareData.filter(r=>r.rowStatus==='diff').length;
+  const missSys = compareData.filter(r=>r.rowStatus==='missing_sys').length;
+  const missFil = compareData.filter(r=>r.rowStatus==='missing_file').length;
+
+  document.getElementById('compare-summary').innerHTML = `
+    <div class="compare-card"><div class="cv cv-blue">${total}</div><div class="cl">รายการทั้งหมด</div></div>
+    <div class="compare-card"><div class="cv cv-green">${match}</div><div class="cl">✅ ตรงกัน</div></div>
+    <div class="compare-card"><div class="cv cv-red">${diff}</div><div class="cl">❌ ยอดต่างกัน</div></div>
+    <div class="compare-card"><div class="cv cv-orange">${missSys}</div><div class="cl">⚠️ ไม่มีในระบบ</div></div>
+    <div class="compare-card"><div class="cv cv-orange">${missFil}</div><div class="cl">📭 ไม่มีในไฟล์</div></div>`;
+
+  // Daily table
+  const dtb = document.querySelector('#tbl-daily tbody');
+  dtb.innerHTML = '';
+  Object.values(fileDaily).forEach(d => {
+    const diff = d.fileAmt - d.sysAmt;
+    const ok   = Math.abs(diff) < 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${d.date}</td><td>${d.shop}</td>
+      <td>฿${d.fileAmt.toLocaleString()}</td>
+      <td>฿${d.sysAmt.toLocaleString()}</td>
+      <td style="color:${ok?'#2e7d32':'#c62828'}">${diff>=0?'+':''}${diff.toLocaleString()}</td>
+      <td><span class="badge ${ok?'badge-ok':'badge-diff'}">${ok?'✅ ตรงกัน':'❌ ต่างกัน'}</span></td>`;
+    dtb.appendChild(tr);
+  });
+
+  renderCompareTable();
+  document.getElementById('compare-result').classList.remove('hidden');
+}
+
+function renderCompareTable() {
+  const filter = document.getElementById('compare-filter').value;
+  const tb = document.querySelector('#tbl-compare tbody');
+  tb.innerHTML = '';
+  compareData.filter(r => !filter || r.rowStatus===filter).forEach(r => {
+    const diff = (r.fileAmt!==''&&r.sysAmt!=='') ? parseFloat(r.fileAmt)-parseFloat(r.sysAmt) : null;
+    const stMap = { match:'✅ ตรงกัน', diff:'❌ ต่าง', missing_sys:'⚠️ ไม่มีในระบบ', missing_file:'📭 ไม่มีในไฟล์' };
+    const clMap = { match:'badge-ok', diff:'badge-diff', missing_sys:'badge-missing', missing_file:'badge-missing' };
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><b>${r.code||'—'}</b></td><td>${r.shop}</td><td>${r.date}</td>
+      <td>${r.fileAmt!==''?'฿'+Number(r.fileAmt).toLocaleString():'—'}</td>
+      <td>${r.sysAmt!==''?'฿'+Number(r.sysAmt).toLocaleString():'—'}</td>
+      <td>${diff!==null?(diff>=0?'+':'')+diff.toLocaleString():'—'}</td>
+      <td><span class="badge ${clMap[r.rowStatus]}">${stMap[r.rowStatus]}</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function exportCompareCSV() {
+  const rows = [['รหัส QR','ร้าน','วันที่','ยอดในไฟล์','ยอดในระบบ','ผลต่าง','สถานะ']];
+  compareData.forEach(r => {
+    const diff = (r.fileAmt!==''&&r.sysAmt!=='') ? parseFloat(r.fileAmt)-parseFloat(r.sysAmt) : '';
+    const stMap = { match:'ตรงกัน', diff:'ยอดต่างกัน', missing_sys:'ไม่มีในระบบ', missing_file:'ไม่มีในไฟล์' };
+    rows.push([r.code||'',r.shop,r.date,r.fileAmt,r.sysAmt,diff,stMap[r.rowStatus]||'']);
+  });
+  downloadCSV(rows, 'hommkesa_compare.csv');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function downloadCSV(rows, filename) {
+  const bom = '﻿';
+  const csv = bom + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0', 2500);
+}
+
+// event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('log-search')?.addEventListener('input', renderLogsTable);
+  document.getElementById('log-filter')?.addEventListener('change', renderLogsTable);
+  document.getElementById('login-pwd')?.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+});
+</script>
+</body>
+</html>
